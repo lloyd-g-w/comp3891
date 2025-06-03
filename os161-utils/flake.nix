@@ -5,7 +5,11 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
   };
 
-  outputs = {nixpkgs, ...}: let
+  outputs = {
+    self,
+    nixpkgs,
+    ...
+  }: let
     system = "x86_64-linux";
     pkgs = import nixpkgs {inherit system;};
 
@@ -42,16 +46,27 @@
   in {
     devShells.${system}.default = pkgs.mkShell {
       buildInputs = [os161Utils];
+
       shellHook = ''
-        # Creates temp dir for OS161 utils so all required files are
-        # in their required relative place
+        echo "Creating a temporary FHS environment for os161-utils..."
+
         export OS161_TEMP_DIR=$(mktemp -d)
-        # Cleans the temp dir on exit
         trap "rm -rf $OS161_TEMP_DIR" EXIT
-        mkdir -p "$OS161_TEMP_DIR/usr/local/bin"
-        # Adds utils to PATH
-        ln -s ${os161Utils}/usr/local/bin/* "$OS161_TEMP_DIR/usr/local/bin/"
+
+        # Create the top-level /usr/local structure
+        mkdir -p "$OS161_TEMP_DIR/usr/local"
+
+        # Symlink EVERYTHING from the package's usr/local into our fake one
+        ln -s ${os161Utils}/usr/local/* "$OS161_TEMP_DIR/usr/local/"
+
+        # Add the bin directory to the PATH
         export PATH="$OS161_TEMP_DIR/usr/local/bin:$PATH"
+
+        # ⭐️ ADD THIS LINE: Tell bmake where to find its system files.
+        export MAKESYSPATH="$OS161_TEMP_DIR/usr/local/share/mk"
+
+        echo "Done. The os161 toolchain is now available."
+        echo ""
       '';
     };
   };
