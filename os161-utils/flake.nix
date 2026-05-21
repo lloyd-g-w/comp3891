@@ -56,13 +56,13 @@
         # Create the top-level /usr/local structure
         mkdir -p "$OS161_TEMP_DIR/usr/local"
 
-        # Symlink EVERYTHING from the package's usr/local into our fake one
+        # Symlink everything from the package's usr/local into our fake one
         ln -s ${os161Utils}/usr/local/* "$OS161_TEMP_DIR/usr/local/"
 
         # Add the bin directory to the PATH
         export PATH="$OS161_TEMP_DIR/usr/local/bin:$PATH"
 
-        # ⭐️ ADD THIS LINE: Tell bmake where to find its system files.
+        # Tell bmake where to find its system files.
         export MAKESYSPATH="$OS161_TEMP_DIR/usr/local/share/mk"
 
         echo "Done. The os161 toolchain is now available."
